@@ -1,0 +1,1625 @@
+<!--
+    GeoJSON Merger Tool
+    Copyright (C) 2025 GeoRoots
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merger - GeoRoots</title>
+    
+    <style>
+        /* CSS Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* CSS Variables for consistent color scheme */
+        :root {
+            --primary-color: #1b4332;
+            --secondary-color: #40916c;
+            --accent-color: #efffef;
+            --dark-color: #1b4332;
+            --light-color: #f8f9fa;
+            --danger-color: #dc6575;
+            --confirm-color: #40916c;
+            --text-color: #333;
+            --border-color: #e9ecef;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            
+            /* Additional colors used throughout the app */
+            --gray-light: #f1f4f2;
+            --gray-medium: #6c757d;
+            --gray-dark: #495057;
+            --gray-border: #e9ecef;
+            --gray-input: #ddd;
+            --white: #ffffff;
+            --black: #000000;
+            --error-bg: #f8d7da;
+            --error-border: #f5c6cb;
+            --error-text: #721c24;
+            --success-bg: #d4edda;
+            --success-border: #c3e6cb;
+            --success-text: #155724;
+            --warning-bg: #fff3cd;
+            --warning-border: #ffeaa7;
+            --warning-text: #856404;
+            --modal-overlay: rgba(0, 0, 0, 0.7);
+            --loading-overlay: rgba(0, 0, 0, 0.6);
+            --spinner-bg: #f3f3f3;
+            --danger-hover: #d14a5a;
+            --success-hover: #4a9f6b;
+            --secondary-hover: #2d5a3d;
+            --drop-border: #ccc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-color);
+            background: var(--light-color);
+            min-height: 100vh;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px var(--shadow-color);
+            overflow: hidden;
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* App Header - Consistent across all GeoRoots apps */
+        .header {
+            background: var(--secondary-color);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .language-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .language-selector select {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+        }
+
+        .language-selector select option {
+            background: var(--white);
+            color: var(--text-color);
+        }
+
+        .language-selector label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .header .small-print {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 8px;
+            line-height: 1.3;
+        }
+
+        .header .small-print a {
+            color: var(--white);
+            transition: color 0.3s ease;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            justify-content: center;
+            align-items: flex-start;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        @media (min-width: 1200px) {
+            .content-area {
+                grid-template-columns: 1fr 1fr;
+                gap: 30px;
+            }
+        }
+
+        /* Panel Layout - Consistent card styling */
+        .panel {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px var(--shadow-color);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-width: 500px;
+        }
+
+        .panel-header {
+            background: var(--gray-light);
+            border-bottom: 1px solid var(--gray-border);
+            padding: 15px 20px;
+            font-weight: 600;
+            color: var(--gray-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-content {
+            flex: 1;
+            padding: 20px;
+            overflow: auto;
+        }
+
+        .file-drop-area {
+            width: 100%;
+            height: 200px;
+            border: 3px dashed var(--drop-border);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            background-color: var(--gray-light);
+            cursor: pointer;
+        }
+
+        .file-drop-area.is-active {
+            border-color: var(--confirm-color);
+            background-color: rgba(88, 183, 117, 0.1);
+        }
+
+        .file-drop-area.has-error {
+            border-color: var(--danger-color);
+            background-color: rgba(220, 101, 117, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            color: var(--gray-medium);
+            margin-bottom: 1rem;
+        }
+
+        .file-list {
+            margin-top: 20px;
+        }
+
+        .file-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .file-items-container {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .file-list-header h4 {
+            margin: 0;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: var(--gray-light);
+            border: 1px solid var(--gray-border);
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: var(--gray-dark);
+        }
+
+        .file-stats {
+            font-size: 0.9rem;
+            color: var(--gray-medium);
+            margin-top: 4px;
+        }
+
+        .remove-file {
+            background: var(--danger-color);
+            color: var(--white);
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s ease;
+        }
+
+        .remove-file:hover {
+            background: var(--danger-hover);
+        }
+
+        .no-files-message {
+            text-align: center;
+            color: var(--gray-medium);
+            font-style: italic;
+            padding: 20px;
+        }
+
+        /* Message styles - consolidated common properties */
+        .error-message,
+        .success-message,
+        .warning-message {
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .error-message {
+            background: var(--error-bg);
+            color: var(--error-text);
+            border: 1px solid var(--error-border);
+        }
+
+        .success-message {
+            background: var(--success-bg);
+            color: var(--success-text);
+            border: 1px solid var(--success-border);
+        }
+
+        .warning-message {
+            background: var(--warning-bg);
+            color: var(--warning-text);
+            border: 1px solid var(--warning-border);
+        }
+
+        /* Button Styles - Consistent across all GeoRoots apps */
+        .btn {
+            background: var(--confirm-color);
+            color: var(--white);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: var(--confirm-color);
+        }
+
+        .btn-success:hover {
+            background: var(--success-hover);
+            box-shadow: 0 4px 12px rgba(74, 159, 107, 0.3);
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger-hover);
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--primary-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--secondary-hover);
+            box-shadow: 0 4px 12px rgba(45, 90, 61, 0.3);
+        }
+
+        .merge-options {
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--gray-dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--gray-input);
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--confirm-color);
+            box-shadow: 0 0 0 2px rgba(88, 183, 117, 0.2);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--gray-light);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid var(--gray-border);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--confirm-color);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--gray-medium);
+            margin-top: 5px;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--loading-overlay);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            flex-direction: column;
+            color: var(--white);
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loading-spinner {
+            border: 8px solid var(--spinner-bg);
+            border-top: 8px solid var(--confirm-color);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--modal-overlay);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .error-modal.show {
+            display: flex;
+        }
+
+        .error-modal-content {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px var(--shadow-color);
+            position: relative;
+        }
+
+        .error-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--error-border);
+        }
+
+        .error-modal-icon {
+            font-size: 2rem;
+            color: var(--danger-color);
+        }
+
+        .error-modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--error-text);
+            margin: 0;
+        }
+
+        .error-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray-medium);
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .error-modal-close:hover {
+            background: var(--gray-light);
+            color: var(--gray-dark);
+        }
+
+        .error-list {
+            margin-bottom: 20px;
+        }
+
+        .error-item {
+            background: var(--error-bg);
+            border: 1px solid var(--error-border);
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .error-file-name {
+            font-weight: 600;
+            color: var(--error-text);
+            margin-bottom: 5px;
+        }
+
+        .error-message {
+            color: var(--error-text);
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .error-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 15px;
+            border-top: 1px solid var(--gray-border);
+        }
+
+        .btn-modal {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: var(--white);
+        }
+
+        .btn-modal-primary {
+            background: var(--danger-color);
+        }
+
+        .btn-modal-primary:hover {
+            background: var(--danger-hover);
+        }
+
+        .btn-modal-secondary {
+            background: var(--gray-medium);
+        }
+
+        .btn-modal-secondary:hover {
+            background: var(--gray-dark);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--gray-border);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--confirm-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .download-links {
+            margin-top: 20px;
+        }
+
+        .download-link {
+            display: block;
+            padding: 10px;
+            background: var(--gray-light);
+            border: 1px solid var(--gray-border);
+            border-radius: 6px;
+            margin-bottom: 10px;
+            text-decoration: none;
+            color: var(--gray-dark);
+            transition: all 0.3s ease;
+        }
+
+        .download-link:hover {
+            background: var(--gray-border);
+            transform: translateY(-1px);
+        }
+
+        /* Mobile-first responsive design */
+        @media (max-width: 1024px) {
+            body {
+                padding: 10px;
+            }
+            
+            .content-area {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 10px;
+            }
+            
+            .panel {
+                min-width: auto;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .header {
+                padding: 15px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+            
+            .header {
+                padding: 20px 15px 15px 15px;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .header p {
+                font-size: 1rem;
+            }
+
+            .language-selector {
+                position: static;
+                justify-content: center;
+                margin-bottom: 15px;
+            }
+            
+            .panel {
+                min-width: auto;
+            }
+            
+            /* Ensure touch-friendly targets */
+            .btn {
+                min-height: 44px;
+                padding: 12px 24px;
+            }
+            
+            .file-drop-area {
+                min-height: 120px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .header p {
+                font-size: 0.9rem;
+            }
+            
+            .file-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .file-info {
+                width: 100%;
+                overflow: hidden;
+            }
+            
+            .file-name {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            
+            .remove-file {
+                align-self: flex-end;
+                min-height: 44px;
+                min-width: 44px;
+            }
+            
+            /* Stack buttons vertically on very small screens */
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .button-group .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main application container -->
+    <div class="container">
+        <div class="main-container">
+            <!-- App Header - Consistent across all GeoRoots apps -->
+            <header class="header">
+            <div class="language-selector">
+                <label for="languageSelect" aria-label="Select language">🌐</label>
+                <select id="languageSelect" aria-label="Language selection">
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                    <option value="pt">Português</option>
+                </select>
+            </div>
+            <h1 data-i18n="title">GeoJSON Merger Tool</h1>
+            <p data-i18n="subtitle">Merge multiple GeoJSON files into a single file</p>
+            <p data-i18n="privacy" class="small-print">Your files and any of their content is only processed locally in your browser and none of your information is sent to anyone else.</p>
+            <p data-i18n="license" class="small-print">This software is free, released under GPLv3 open source license.</p>
+            <p class="small-print"><span data-i18n="downloadLatest">Download latest version and other tools on</span> <a href="https://georoots.eu/" target="_blank">https://georoots.eu/</a></p>
+        </header>
+
+        <!-- Main content area -->
+        <main class="content-area">
+            <!-- Input Panel -->
+            <section class="panel">
+                <div class="panel-header">
+                    📤
+                    <span data-i18n="inputPanel">Input Files</span>
+                </div>
+                <div class="panel-content">
+                    <div class="file-drop-area" id="dropArea">
+                        <div class="upload-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                                <path d="M12,12L16,16H13.5V19H10.5V16H8L12,12Z"/>
+                            </svg>
+                        </div>
+                        <p data-i18n="dropFiles">Drop your GeoJSON/JSON files here</p>
+                        <p data-i18n="orClickBrowse">or click to browse</p>
+                        <input type="file" id="fileInput" accept=".json,.geojson" multiple style="display: none;" aria-label="Upload GeoJSON files">
+                    </div>
+
+                    <div id="fileList" class="file-list">
+                        <div class="file-list-header">
+                            <h4 data-i18n="loadedFiles">Loaded Files:</h4>
+                            <button id="addMoreFilesBtn" class="btn btn-success">
+                                ➕ <span data-i18n="addMoreFiles">Add More Files</span>
+                            </button>
+                        </div>
+                        <div class="file-items-container">
+                            <div id="fileItems"></div>
+                        </div>
+                    </div>
+
+                    <div id="errorMessages"></div>
+                </div>
+            </section>
+
+            <!-- Processing Panel -->
+            <section class="panel">
+                <div class="panel-header">
+                    📊
+                    <span data-i18n="overviewPanel">Overview</span>
+                </div>
+                <div class="panel-content">
+                    <div id="fileStats">
+                        <div class="stats">
+                            <div class="stat-card">
+                                <span id="totalFiles" class="stat-number">0</span>
+                                <div class="stat-label" data-i18n="files">Files</div>
+                            </div>
+                            <div class="stat-card">
+                                <span id="totalFeatures" class="stat-number">0</span>
+                                <div class="stat-label" data-i18n="features">Features</div>
+                            </div>
+                            <div class="stat-card">
+                                <span id="totalPolygons" class="stat-number">0</span>
+                                <div class="stat-label" data-i18n="polygons">Polygons</div>
+                            </div>
+                            <div class="stat-card">
+                                <span id="totalMultiPolygons" class="stat-number">0</span>
+                                <div class="stat-label" data-i18n="multiPolygons">MultiPolygons</div>
+                            </div>
+                            <div class="stat-card">
+                                <span id="totalPoints" class="stat-number">0</span>
+                                <div class="stat-label" data-i18n="points">Points</div>
+                            </div>
+                            <div class="stat-card">
+                                <span id="duplicateGeometries" class="stat-number">0</span>
+                                <div class="stat-label" data-i18n="duplicateGeometries">Duplicate Geometries</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="merge-options">
+                        <div class="form-group">
+                            <label for="outputFileName" data-i18n="outputFileName">Output File Name:</label>
+                            <input type="text" id="outputFileName" placeholder="merged_geojson" class="form-control">
+                        </div>
+                    </div>
+
+                    <div id="actionButtons" class="button-group">
+                        <button id="mergeBtn" class="btn btn-success">
+                            🔗 <span data-i18n="mergeFiles">Merge Files</span>
+                        </button>
+                        <button id="resetBtn" class="btn btn-danger">
+                            🔄 <span data-i18n="reset">Reset</span>
+                        </button>
+                    </div>
+
+                    <div class="progress-bar hidden" id="progressBar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+
+                    <div id="downloadLinks" class="download-links hidden">
+                        <h4>📁 <span data-i18n="downloadMergedFile">Download Merged File</span></h4>
+                        <div id="downloadLinksContainer"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <p data-i18n="processingMessage">Processing your files...</p>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="error-modal" id="errorModal">
+        <div class="error-modal-content">
+            <div class="error-modal-header">
+                <span class="error-modal-icon">⚠️</span>
+                <h2 class="error-modal-title" data-i18n="errorModalTitle">Errors Found</h2>
+                <button class="error-modal-close" id="closeErrorModal">&times;</button>
+            </div>
+            <div class="error-list" id="errorList"></div>
+            <div class="error-modal-footer">
+                <button class="btn-modal btn-modal-secondary" id="closeErrorModalBtn" data-i18n="closeErrorModal">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // GeoJSON Merger Application
+        // Main application logic and functionality
+        
+        // Translation system for internationalization
+        const translations = {
+            en: {
+                title: "GeoJSON Merger Tool",
+                subtitle: "Merge multiple GeoJSON files into a single file",
+                privacy: "Your files and any of their content is only processed locally in your browser and none of your information is sent to anyone else.",
+                license: "This software is free, released under GPLv3 open source license.",
+                inputPanel: "Input Files",
+                overviewPanel: "Overview",
+                outputFileName: "Output File Name:",
+                addMoreFiles: "Add More Files",
+                dropFiles: "Drop your GeoJSON/JSON files here",
+                orClickBrowse: "or click to browse",
+                loadedFiles: "Loaded Files:",
+                files: "Files",
+                features: "Features",
+                polygons: "Polygons",
+                multiPolygons: "MultiPolygons",
+                points: "Points",
+                duplicateGeometries: "Duplicate Geometries",
+                mergeFiles: "Merge Files",
+                reset: "Reset",
+                downloadMergedFile: "Download Merged File",
+                pleaseProvideFiles: "Please provide at least one file",
+                jsonValid: "JSON is valid!",
+                failedToReadFile: "Failed to read file: ",
+                fileTooLarge: "File is too large. Maximum size is 10MB.",
+                invalidGeoJSON: "Invalid GeoJSON structure",
+                invalidGeoJSONStructure: "Invalid GeoJSON structure",
+                missingTypeField: "Missing 'type' field",
+                invalidTypeField: "Invalid 'type' field",
+                invalidFeaturesArray: "Invalid 'features' array",
+                noValidDataToProcess: "No valid data to process",
+                noFilesLoaded: "No files loaded yet",
+                processingFailed: "Processing failed: ",
+                successfullyMerged: "Successfully merged ",
+                filesCount: " files with ",
+                featuresCount: " features!",
+                useFixerApp: "Invalid GeoJSON detected. Please use the GeoJSON Fixer app to validate and fix your file before using the merger.",
+                processingMessage: "Processing your files...",
+                downloadLatest: "Download latest version and other tools on",
+                errorModalTitle: "Errors Found",
+                closeErrorModal: "Close",
+                invalidFileType: "Invalid file type. Please select .json or .geojson files only.",
+                noFilesSelected: "No files were selected. Please select one or more GeoJSON files."
+            },
+            es: {
+                title: "Herramienta de Fusión de GeoJSON",
+                subtitle: "Combina múltiples archivos GeoJSON en un solo archivo",
+                privacy: "Tus archivos y todo su contenido se procesa únicamente localmente en tu navegador y ninguna de tu información se envía a nadie más.",
+                license: "Este software es gratuito, liberado bajo licencia de código abierto GPLv3.",
+                downloadLatest: "Descarga la última versión y otras herramientas en",
+                inputPanel: "Archivos de Entrada",
+                overviewPanel: "Resumen",
+                outputFileName: "Nombre del Archivo de Salida:",
+                addMoreFiles: "Agregar Más Archivos",
+                dropFiles: "Suelta tus archivos GeoJSON/JSON aquí",
+                orClickBrowse: "o haz clic para explorar",
+                loadedFiles: "Archivos Cargados:",
+                files: "Archivos",
+                features: "Características",
+                polygons: "Polígonos",
+                multiPolygons: "MultiPolígonos",
+                points: "Puntos",
+                duplicateGeometries: "Geometrías Duplicadas",
+                mergeFiles: "Fusionar Archivos",
+                reset: "Reiniciar",
+                downloadMergedFile: "Descargar Archivo Fusionado",
+                pleaseProvideFiles: "Por favor proporciona al menos un archivo",
+                jsonValid: "¡JSON es válido!",
+                failedToReadFile: "Error al leer archivo: ",
+                fileTooLarge: "El archivo es demasiado grande. Tamaño máximo es 10MB.",
+                invalidGeoJSON: "Estructura GeoJSON inválida",
+                invalidGeoJSONStructure: "Estructura GeoJSON inválida",
+                missingTypeField: "Campo 'type' faltante",
+                invalidTypeField: "Campo 'type' inválido",
+                invalidFeaturesArray: "Array 'features' inválido",
+                noValidDataToProcess: "No hay datos válidos para procesar",
+                noFilesLoaded: "No hay archivos cargados aún",
+                processingFailed: "El procesamiento falló: ",
+                successfullyMerged: "Fusionado exitosamente ",
+                filesCount: " archivos con ",
+                featuresCount: " características!",
+                useFixerApp: "GeoJSON inválido detectado. Por favor usa la aplicación GeoJSON Fixer para validar y corregir tu archivo antes de usar el fusionador.",
+                processingMessage: "Procesando tus archivos...",
+                errorModalTitle: "Errores Encontrados",
+                closeErrorModal: "Cerrar",
+                invalidFileType: "Tipo de archivo inválido. Por favor selecciona solo archivos .json o .geojson.",
+                noFilesSelected: "No se seleccionaron archivos. Por favor selecciona uno o más archivos GeoJSON."
+            },
+            pt: {
+                title: "Ferramenta de Fusão de GeoJSON",
+                subtitle: "Combine múltiplos arquivos GeoJSON em um único arquivo",
+                privacy: "Seus arquivos e todo seu conteúdo é processado apenas localmente no seu navegador e nenhuma de suas informações é enviada para ninguém mais.",
+                license: "Este software é gratuito, liberado sob licença de código aberto GPLv3.",
+                downloadLatest: "Baixe a versão mais recente e outras ferramentas em",
+                inputPanel: "Arquivos de Entrada",
+                overviewPanel: "Visão Geral",
+                outputFileName: "Nome do Arquivo de Saída:",
+                addMoreFiles: "Adicionar Mais Arquivos",
+                dropFiles: "Solte seus arquivos GeoJSON/JSON aqui",
+                orClickBrowse: "ou clique para navegar",
+                loadedFiles: "Arquivos Carregados:",
+                files: "Arquivos",
+                features: "Características",
+                polygons: "Polígonos",
+                multiPolygons: "MultiPolígonos",
+                points: "Pontos",
+                duplicateGeometries: "Geometrias Duplicadas",
+                mergeFiles: "Fusionar Arquivos",
+                reset: "Reiniciar",
+                downloadMergedFile: "Baixar Arquivo Fusionado",
+                pleaseProvideFiles: "Por favor forneça pelo menos um arquivo",
+                jsonValid: "JSON é válido!",
+                failedToReadFile: "Falha ao ler arquivo: ",
+                fileTooLarge: "O arquivo é muito grande. Tamanho máximo é 10MB.",
+                invalidGeoJSON: "Estrutura GeoJSON inválida",
+                invalidGeoJSONStructure: "Estrutura GeoJSON inválida",
+                missingTypeField: "Campo 'type' ausente",
+                invalidTypeField: "Campo 'type' inválido",
+                invalidFeaturesArray: "Array 'features' inválido",
+                noValidDataToProcess: "Não há dados válidos para processar",
+                noFilesLoaded: "Nenhum arquivo carregado ainda",
+                processingFailed: "O processamento falhou: ",
+                successfullyMerged: "Fusionado com sucesso ",
+                filesCount: " arquivos com ",
+                featuresCount: " características!",
+                useFixerApp: "GeoJSON inválido detectado. Por favor use a aplicação GeoJSON Fixer para validar e corrigir seu arquivo antes de usar o fusionador.",
+                processingMessage: "Processando seus arquivos...",
+                errorModalTitle: "Erros Encontrados",
+                closeErrorModal: "Fechar",
+                invalidFileType: "Tipo de arquivo inválido. Por favor selecione apenas arquivos .json ou .geojson.",
+                noFilesSelected: "Nenhum arquivo foi selecionado. Por favor selecione um ou mais arquivos GeoJSON."
+            }
+        };
+
+        /**
+         * Main GeoJSON Merger class
+         * Handles file processing, validation, and merging operations
+         */
+        class GeoJSONMerger {
+            constructor() {
+                // Application state
+                this.loadedFiles = [];
+                this.mergedFeatures = [];
+                this.eventListeners = new Map();
+                this.currentLanguage = 'en';
+                this.pendingErrors = []; // Collect errors during batch processing
+                
+                // Initialize application
+                this.initializeEventListeners();
+                this.initializeLanguage();
+            }
+
+            /**
+             * Initialize all event listeners for user interactions
+             * Sets up file upload, button clicks, and modal interactions
+             */
+            initializeEventListeners() {
+                const dropArea = document.getElementById('dropArea');
+                const fileInput = document.getElementById('fileInput');
+
+                // File upload handlers
+                this.addEventListener(dropArea, 'click', () => fileInput.click());
+                this.addEventListener(dropArea, 'dragover', this.handleDragOver.bind(this));
+                this.addEventListener(dropArea, 'dragleave', this.handleDragLeave.bind(this));
+                this.addEventListener(dropArea, 'drop', this.handleDrop.bind(this));
+                this.addEventListener(fileInput, 'change', this.handleFileSelect.bind(this));
+
+                // Button handlers
+                this.addEventListener(document.getElementById('mergeBtn'), 'click', this.mergeFiles.bind(this));
+                this.addEventListener(document.getElementById('resetBtn'), 'click', this.reset.bind(this));
+                this.addEventListener(document.getElementById('addMoreFilesBtn'), 'click', () => fileInput.click());
+
+                // Language selector
+                this.addEventListener(document.getElementById('languageSelect'), 'change', this.changeLanguage.bind(this));
+
+                // Error modal close handlers
+                this.addEventListener(document.getElementById('closeErrorModal'), 'click', this.hideErrorModal.bind(this));
+                this.addEventListener(document.getElementById('closeErrorModalBtn'), 'click', this.hideErrorModal.bind(this));
+                
+                // Close modal when clicking outside
+                this.addEventListener(document.getElementById('errorModal'), 'click', (e) => {
+                    if (e.target.id === 'errorModal') {
+                        this.hideErrorModal();
+                    }
+                });
+
+                // Keyboard support for error modal
+                this.addEventListener(document, 'keydown', (e) => {
+                    if (e.key === 'Escape' && document.getElementById('errorModal').classList.contains('show')) {
+                        this.hideErrorModal();
+                    }
+                });
+            }
+
+            /**
+             * Add event listener with tracking for cleanup
+             * @param {Element} element - DOM element to attach listener to
+             * @param {string} event - Event type
+             * @param {Function} handler - Event handler function
+             */
+            addEventListener(element, event, handler) {
+                element.addEventListener(event, handler);
+                const key = `${element.id || 'unknown'}_${event}`;
+                if (!this.eventListeners.has(key)) {
+                    this.eventListeners.set(key, []);
+                }
+                this.eventListeners.get(key).push({ element, event, handler });
+            }
+
+            /**
+             * Initialize language settings from localStorage or defaults
+             */
+            initializeLanguage() {
+                // Set default language or load from localStorage
+                const savedLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                document.getElementById('languageSelect').value = savedLanguage;
+                this.currentLanguage = savedLanguage;
+                this.updateTranslations();
+            }
+
+            /**
+             * Handle language change and update UI
+             * @param {Event} event - Change event from language selector
+             */
+            changeLanguage(event) {
+                this.currentLanguage = event.target.value;
+                localStorage.setItem('preferredLanguage', this.currentLanguage);
+                this.updateTranslations();
+            }
+
+            /**
+             * Update all UI elements with current language translations
+             */
+            updateTranslations() {
+                const elements = document.querySelectorAll('[data-i18n]');
+                elements.forEach(element => {
+                    const key = element.getAttribute('data-i18n');
+                    const translation = translations[this.currentLanguage][key];
+                    if (translation) {
+                        element.textContent = translation;
+                    }
+                });
+            }
+
+            handleDragOver(e) {
+                e.preventDefault();
+                document.getElementById('dropArea').classList.add('is-active');
+            }
+
+            handleDragLeave(e) {
+                e.preventDefault();
+                document.getElementById('dropArea').classList.remove('is-active');
+            }
+
+            handleDrop(e) {
+                e.preventDefault();
+                document.getElementById('dropArea').classList.remove('is-active');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    this.loadFiles(Array.from(files));
+                } else {
+                    this.pendingErrors = [{
+                        fileName: 'File Drop',
+                        error: this.getTranslation('noFilesSelected')
+                    }];
+                    this.showErrorModal();
+                }
+            }
+
+            handleFileSelect(e) {
+                const files = e.target.files;
+                if (files.length > 0) {
+                    this.loadFiles(Array.from(files));
+                } else {
+                    this.pendingErrors = [{
+                        fileName: 'File Selection',
+                        error: this.getTranslation('noFilesSelected')
+                    }];
+                    this.showErrorModal();
+                }
+            }
+
+            async loadFiles(files) {
+                // Reset pending errors for this batch
+                this.pendingErrors = [];
+                let successfulFiles = 0;
+                
+                for (const file of files) {
+                    try {
+                        // Check file type
+                        if (!this.isValidFileType(file)) {
+                            this.pendingErrors.push({
+                                fileName: file.name,
+                                error: this.getTranslation('invalidFileType')
+                            });
+                            continue;
+                        }
+
+                        const maxSize = 10 * 1024 * 1024; // 10MB
+                        if (file.size > maxSize) {
+                            this.pendingErrors.push({
+                                fileName: file.name,
+                                error: this.getTranslation('fileTooLarge')
+                            });
+                            continue;
+                        }
+
+                        const text = await file.text();
+                        const validation = this.validateAndProcessFile(text, file.name);
+                        if (validation.isValid) {
+                            this.loadedFiles.push({
+                                name: file.name,
+                                data: validation.data,
+                                features: validation.features
+                            });
+                            successfulFiles++;
+                        } else {
+                            // Add validation error to pending errors
+                            this.pendingErrors.push({
+                                fileName: file.name,
+                                error: validation.error || this.getTranslation('useFixerApp')
+                            });
+                        }
+                    } catch (error) {
+                        this.pendingErrors.push({
+                            fileName: file.name,
+                            error: this.getTranslation('failedToReadFile') + error.message
+                        });
+                    }
+                }
+                
+                // Show errors in modal if any occurred
+                if (this.pendingErrors.length > 0) {
+                    this.showErrorModal();
+                }
+                             
+                this.updateFileList();
+            }
+
+            validateAndProcessFile(text, fileName) {
+                if (!text.trim()) {
+                    return { 
+                        isValid: false, 
+                        error: this.getTranslation('pleaseProvideFiles') 
+                    };
+                }
+
+                try {
+                    const parsed = JSON.parse(text);
+                    const geoJSONValidation = this.validateGeoJSONStructure(parsed);
+                    if (!geoJSONValidation.isValid) {
+                        return { 
+                            isValid: false, 
+                            error: geoJSONValidation.error || this.getTranslation('useFixerApp') 
+                        };
+                    }
+                    
+                    const features = this.extractFeatures(parsed);
+                    return { isValid: true, data: parsed, features: features };
+                } catch (error) {
+                    return { 
+                        isValid: false, 
+                        error: this.getTranslation('useFixerApp') 
+                    };
+                }
+            }
+
+            validateGeoJSONStructure(data) {
+                if (!data || typeof data !== 'object') {
+                    return { isValid: false, error: this.getTranslation('invalidGeoJSONStructure') };
+                }
+
+                if (!data.type) {
+                    return { isValid: false, error: this.getTranslation('missingTypeField') };
+                }
+
+                const validTypes = ['Feature', 'FeatureCollection', 'Point', 'LineString', 'Polygon', 'MultiPoint', 'MultiLineString', 'MultiPolygon', 'GeometryCollection'];
+                if (!validTypes.includes(data.type)) {
+                    return { isValid: false, error: this.getTranslation('invalidTypeField') };
+                }
+
+                if (data.type === 'FeatureCollection') {
+                    if (!Array.isArray(data.features)) {
+                        return { isValid: false, error: this.getTranslation('invalidFeaturesArray') };
+                    }
+                }
+
+                return { isValid: true };
+            }
+
+            extractFeatures(data) {
+                const features = [];
+
+                if (data.type === 'FeatureCollection') {
+                    return data.features || [];
+                } else if (data.type === 'Feature') {
+                    return [data];
+                } else if (data.type && ['Point', 'LineString', 'Polygon', 'MultiPoint', 'MultiLineString', 'MultiPolygon'].includes(data.type)) {
+                    return [{
+                        type: 'Feature',
+                        geometry: data,
+                        properties: {}
+                    }];
+                } else if (Array.isArray(data)) {
+                    data.forEach(item => {
+                        features.push(...this.extractFeatures(item));
+                    });
+                }
+
+                return features;
+            }
+
+            updateFileList() {
+                const fileItems = document.getElementById('fileItems');
+                fileItems.innerHTML = '';
+
+                if (this.loadedFiles.length === 0) {
+                    const noFilesMessage = document.createElement('div');
+                    noFilesMessage.className = 'no-files-message';
+                    noFilesMessage.textContent = this.getTranslation('noFilesLoaded');
+                    fileItems.appendChild(noFilesMessage);
+                    this.updateOutputFileName();
+                    // Reset stats to zero when no files are loaded
+                    this.updateStats(0, 0, 0, 0, 0, 0);
+                    return;
+                }
+
+                this.loadedFiles.forEach((file, index) => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+                    
+                    const fileInfo = document.createElement('div');
+                    fileInfo.className = 'file-info';
+                    
+                    const fileName = document.createElement('div');
+                    fileName.className = 'file-name';
+                    fileName.textContent = file.name;
+                    
+                    const fileStats = document.createElement('div');
+                    fileStats.className = 'file-stats';
+                    fileStats.textContent = `${file.features.length} features`;
+                    
+                    fileInfo.appendChild(fileName);
+                    fileInfo.appendChild(fileStats);
+                    
+                    const removeButton = document.createElement('button');
+                    removeButton.className = 'remove-file';
+                    removeButton.textContent = '✕';
+                    removeButton.onclick = () => this.removeFile(index);
+                    
+                    fileItem.appendChild(fileInfo);
+                    fileItem.appendChild(removeButton);
+                    fileItems.appendChild(fileItem);
+                });
+
+                // Update statistics and filename
+                this.updateOverallStats();
+                this.updateOutputFileName();
+            }
+
+            removeFile(index) {
+                this.loadedFiles.splice(index, 1);
+                this.updateFileList();
+            }
+
+            updateOverallStats() {
+                let totalFeatures = 0;
+                let polygonCount = 0;
+                let multiPolygonCount = 0;
+                let pointCount = 0;
+                let duplicateCount = 0;
+
+                this.loadedFiles.forEach(file => {
+                    totalFeatures += file.features.length;
+                    
+                    file.features.forEach(feature => {
+                        if (feature.geometry) {
+                            if (feature.geometry.type === 'Polygon') {
+                                polygonCount++;
+                            } else if (feature.geometry.type === 'MultiPolygon') {
+                                multiPolygonCount++;
+                            } else if (feature.geometry.type === 'Point') {
+                                pointCount++;
+                            }
+                        }
+                    });
+                });
+
+                // Calculate duplicate geometries across all files
+                const geometryMap = new Map();
+                this.loadedFiles.forEach(file => {
+                    file.features.forEach(feature => {
+                        if (feature.geometry) {
+                            const geometryKey = JSON.stringify(feature.geometry);
+                            if (geometryMap.has(geometryKey)) {
+                                duplicateCount++;
+                            } else {
+                                geometryMap.set(geometryKey, true);
+                            }
+                        }
+                    });
+                });
+
+                this.updateStats(this.loadedFiles.length, totalFeatures, polygonCount, multiPolygonCount, pointCount, duplicateCount);
+            }
+
+            updateOutputFileName() {
+                const outputFileNameInput = document.getElementById('outputFileName');
+                if (this.loadedFiles.length === 0) {
+                    outputFileNameInput.value = '';
+                    return;
+                }
+
+                // Create a default filename based on the first loaded file
+                const firstFile = this.loadedFiles[0];
+                const baseName = firstFile.name.replace(/\.[^/.]+$/, ''); // Remove extension
+                const defaultName = `${baseName}_merged`;
+                outputFileNameInput.value = defaultName;
+            }
+
+            async mergeFiles() {
+                if (this.loadedFiles.length === 0) {
+                    this.pendingErrors = [{
+                        fileName: 'Merge Operation',
+                        error: this.getTranslation('noValidDataToProcess')
+                    }];
+                    this.showErrorModal();
+                    return;
+                }
+
+                this.showLoading(true);
+                this.updateProgress(0);
+
+                try {
+                    // Merge all features from all files
+                    this.mergedFeatures = [];
+                    this.loadedFiles.forEach(file => {
+                        this.mergedFeatures.push(...file.features);
+                    });
+
+                    this.updateProgress(100);
+
+                    // Download merged file
+                    this.downloadMergedFile();
+                    
+                    this.showSuccess(this.getTranslation('successfullyMerged') + 
+                                  this.loadedFiles.length + 
+                                  this.getTranslation('filesCount') + 
+                                  this.mergedFeatures.length + 
+                                  this.getTranslation('featuresCount'));
+                    
+                } catch (error) {
+                    this.pendingErrors = [{
+                        fileName: 'Merge Operation',
+                        error: this.getTranslation('processingFailed') + error.message
+                    }];
+                    this.showErrorModal();
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+
+
+            updateStats(files, features, polygons, multiPolygons, points, duplicates) {
+                document.getElementById('totalFiles').textContent = files;
+                document.getElementById('totalFeatures').textContent = features;
+                document.getElementById('totalPolygons').textContent = polygons;
+                document.getElementById('totalMultiPolygons').textContent = multiPolygons;
+                document.getElementById('totalPoints').textContent = points;
+                document.getElementById('duplicateGeometries').textContent = duplicates;
+            }
+
+            downloadMergedFile() {
+                const container = document.getElementById('downloadLinksContainer');
+                container.innerHTML = '';
+
+                const geoJSON = {
+                    type: 'FeatureCollection',
+                    features: this.mergedFeatures
+                };
+
+                const blob = new Blob([JSON.stringify(geoJSON, null, 2)], {
+                    type: 'application/json'
+                });
+                
+                const url = URL.createObjectURL(blob);
+                
+                // Get the custom filename or use default
+                const outputFileName = document.getElementById('outputFileName').value.trim();
+                const fileName = outputFileName ? `${outputFileName}.geojson` : `merged_geojson_${new Date().toISOString().slice(0, 10)}.geojson`;
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = fileName;
+                link.className = 'download-link';
+                link.innerHTML = `📁 ${fileName} (${this.mergedFeatures.length} features)`;
+                
+                container.appendChild(link);
+                
+                // Auto-download after a short delay
+                setTimeout(() => {
+                    link.click();
+                    URL.revokeObjectURL(url);
+                }, 100);
+
+                document.getElementById('downloadLinks').classList.remove('hidden');
+            }
+
+            reset() {
+                this.loadedFiles = [];
+                this.mergedFeatures = [];
+
+                document.getElementById('errorMessages').innerHTML = '';
+                document.getElementById('fileInput').value = '';
+                document.getElementById('outputFileName').value = '';
+                
+                // Reset all statistics to zero
+                this.updateStats(0, 0, 0, 0, 0, 0);
+                
+                // Update file list and stats
+                this.updateFileList();
+            }
+
+            getTranslation(key) {
+                return translations[this.currentLanguage][key] || key;
+            }
+
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.innerHTML = `⚠️ ${message}`;
+                
+                const container = document.getElementById('errorMessages');
+                container.innerHTML = '';
+                container.appendChild(errorDiv);
+            }
+
+            showSuccess(message) {
+                const successDiv = document.createElement('div');
+                successDiv.className = 'success-message';
+                successDiv.innerHTML = `✔️ ${message}`;
+                
+                const container = document.getElementById('errorMessages');
+                container.innerHTML = '';
+                container.appendChild(successDiv);
+            }
+
+            clearErrors() {
+                document.getElementById('errorMessages').innerHTML = '';
+            }
+
+            showErrorModal() {
+                const errorList = document.getElementById('errorList');
+                errorList.innerHTML = '';
+                
+                this.pendingErrors.forEach(errorInfo => {
+                    const errorItem = document.createElement('div');
+                    errorItem.className = 'error-item';
+                    
+                    const fileName = document.createElement('div');
+                    fileName.className = 'error-file-name';
+                    fileName.textContent = errorInfo.fileName;
+                    
+                    const errorMessage = document.createElement('div');
+                    errorMessage.className = 'error-message';
+                    errorMessage.textContent = errorInfo.error;
+                    
+                    errorItem.appendChild(fileName);
+                    errorItem.appendChild(errorMessage);
+                    errorList.appendChild(errorItem);
+                });
+                
+                document.getElementById('errorModal').classList.add('show');
+            }
+
+            hideErrorModal() {
+                document.getElementById('errorModal').classList.remove('show');
+                this.pendingErrors = []; // Clear pending errors
+            }
+
+            isValidFileType(file) {
+                const validExtensions = ['.json', '.geojson'];
+                const fileName = file.name.toLowerCase();
+                return validExtensions.some(ext => fileName.endsWith(ext));
+            }
+
+            showLoading(show) {
+                const overlay = document.getElementById('loadingOverlay');
+                if (show) {
+                    overlay.classList.add('show');
+                } else {
+                    overlay.classList.remove('show');
+                }
+            }
+
+            updateProgress(percent) {
+                const progressBar = document.getElementById('progressBar');
+                const progressFill = document.getElementById('progressFill');
+                
+                if (percent > 0) {
+                    progressBar.classList.remove('hidden');
+                    progressFill.style.width = percent + '%';
+                    
+                    if (percent >= 100) {
+                        setTimeout(() => {
+                            progressBar.classList.add('hidden');
+                        }, 1000);
+                    }
+                }
+            }
+        }
+
+        // Initialize the application when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            const merger = new GeoJSONMerger();
+        });
+    </script>
+</body>
+</html> 
