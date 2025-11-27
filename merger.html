@@ -21,6 +21,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Merger - GeoRoots</title>
     
     <style>
@@ -927,7 +930,7 @@
                 pleaseProvideFiles: "Please provide at least one file",
                 jsonValid: "JSON is valid!",
                 failedToReadFile: "Failed to read file: ",
-                fileTooLarge: "File is too large. Maximum size is 10MB.",
+                fileTooLarge: "File is too large. Maximum size is 1000MB.",
                 invalidGeoJSON: "Invalid GeoJSON structure",
                 invalidGeoJSONStructure: "Invalid GeoJSON structure",
                 missingTypeField: "Missing 'type' field",
@@ -972,7 +975,7 @@
                 pleaseProvideFiles: "Por favor proporciona al menos un archivo",
                 jsonValid: "¡JSON es válido!",
                 failedToReadFile: "Error al leer archivo: ",
-                fileTooLarge: "El archivo es demasiado grande. Tamaño máximo es 10MB.",
+                fileTooLarge: "El archivo es demasiado grande. Tamaño máximo es 1000MB.",
                 invalidGeoJSON: "Estructura GeoJSON inválida",
                 invalidGeoJSONStructure: "Estructura GeoJSON inválida",
                 missingTypeField: "Campo 'type' faltante",
@@ -1016,7 +1019,7 @@
                 pleaseProvideFiles: "Por favor forneça pelo menos um arquivo",
                 jsonValid: "JSON é válido!",
                 failedToReadFile: "Falha ao ler arquivo: ",
-                fileTooLarge: "O arquivo é muito grande. Tamanho máximo é 10MB.",
+                fileTooLarge: "O arquivo é muito grande. Tamanho máximo é 1000MB.",
                 invalidGeoJSON: "Estrutura GeoJSON inválida",
                 invalidGeoJSONStructure: "Estrutura GeoJSON inválida",
                 missingTypeField: "Campo 'type' ausente",
@@ -1201,7 +1204,7 @@
                             continue;
                         }
 
-                        const maxSize = 10 * 1024 * 1024; // 10MB
+                        const maxSize = 1000 * 1024 * 1024; // 1000 MB
                         if (file.size > maxSize) {
                             this.pendingErrors.push({
                                 fileName: file.name,
